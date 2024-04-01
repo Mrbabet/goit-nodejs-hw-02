@@ -6,11 +6,8 @@ require("dotenv").config();
 
 const PORT = process.env.PORT || 3000;
 const uriDb = process.env.DB_HOST;
-
 const contactsRouter = require("./routes/api/contacts");
-
 const app = express();
-
 const formatsLogger = app.get("env") === "development" ? "dev" : "short";
 
 app.use(logger(formatsLogger));
@@ -27,8 +24,6 @@ app.use((err, req, res, next) => {
   const { status = 500, message = "Server error" } = err;
   res.status(status).json({ message });
 });
-
-mongoose.set("strictQuery", true);
 
 mongoose
   .connect(uriDb)

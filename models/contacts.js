@@ -1,11 +1,10 @@
-const { Schema, model } = require("mongoose");
-const { handleErrors } = require("../middlewares");
+const { Schema, models, model } = require("mongoose");
 const Joi = require("joi");
 
 const emailRegex = /^([a-zA-Z0-9_\-.]+)@([a-zA-Z0-9_\-.]+)\.([a-zA-z]+)$/;
-const phoneRegex = /^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$/;
+const phoneRegex = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
 
-const contactSchema = new Schema(
+const ContactSchema = new Schema(
   {
     name: {
       type: String,
@@ -22,15 +21,13 @@ const contactSchema = new Schema(
       type: String,
       match: phoneRegex,
     },
-    favorite: {
+    favourite: {
       type: Boolean,
       default: false,
     },
   },
   { versionKey: false, timestamps: true }
 );
-
-contactSchema.post("save", handleErrors);
 
 const joiSchema = Joi.object({
   name: Joi.string().min(3).required(),
@@ -39,10 +36,10 @@ const joiSchema = Joi.object({
   favorite: Joi.bool(),
 });
 
-const favoriteJoiSchema = Joi.object({
-  favorite: Joi.bool().required(),
+const favouriteJoiSchema = Joi.object({
+  favourite: Joi.bool().required(),
 });
 
-const Contact = model("contact", contactSchema);
+const Contact = models?.Contact || model("contacts", ContactSchema);
 
-module.exports = { Contact, joiSchema, favoriteJoiSchema };
+module.exports = { Contact, joiSchema, favouriteJoiSchema };

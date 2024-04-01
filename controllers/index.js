@@ -1,14 +1,11 @@
-const service = require("../models");
-
+const { Contact } = require("../models/contacts");
 const get = async (req, res, next) => {
   try {
-    const results = await service.getAll();
+    const results = await Contact.find().exec();
     res.json({
       status: "success",
       code: 200,
-      data: {
-        contacts: results,
-      },
+      contacts: results,
     });
   } catch (e) {
     console.error(e);
@@ -16,9 +13,9 @@ const get = async (req, res, next) => {
   }
 };
 const getById = async (req, res, next) => {
-  const { id } = req.params;
+  const { contactId } = req.params;
   try {
-    const result = await service.getContactById(id);
+    const result = await Contact.findById(contactId);
     if (result) {
       res.json({
         status: "success",
@@ -29,7 +26,7 @@ const getById = async (req, res, next) => {
       res.status(404).json({
         status: "error",
         code: 404,
-        message: `Not found contact id: ${id}`,
+        message: `Not found contact id: ${contactId}`,
         data: "Not Found",
       });
     }
@@ -39,9 +36,8 @@ const getById = async (req, res, next) => {
   }
 };
 const create = async (req, res, next) => {
-  const { username, email, phone } = req.body;
   try {
-    const result = await service.add({ username, email, phone });
+    const result = await Contact.create(req.body);
 
     res.status(201).json({
       status: "success",
@@ -54,10 +50,12 @@ const create = async (req, res, next) => {
   }
 };
 const update = async (req, res, next) => {
-  const { id } = req.params;
-  const { username, email, phone } = req.body;
+  const { contactId } = req.params;
+
   try {
-    const result = await service.updateById(id, { username, email, phone });
+    const result = await Contact.findByIdAndUpdate(contactId, req.body, {
+      new: true,
+    });
     if (result) {
       res.json({
         status: "success",
@@ -68,7 +66,7 @@ const update = async (req, res, next) => {
       res.status(404).json({
         status: "error",
         code: 404,
-        message: `Not found contact id: ${id}`,
+        message: `Not found contact id: ${contactId}`,
         data: "Not Found",
       });
     }
@@ -78,11 +76,15 @@ const update = async (req, res, next) => {
   }
 };
 const updateStatus = async (req, res, next) => {
-  const { id } = req.params;
-  const { favorite } = req.body;
+  const { contactId } = req.params;
+  const { favourite } = req.body;
 
   try {
-    const result = await service.updateFavorite(id, { favorite });
+    const result = await Contact.findByIdAndUpdate(
+      contactId,
+      { favourite },
+      { new: true }
+    );
     if (result) {
       res.json({
         status: "success",
@@ -93,7 +95,7 @@ const updateStatus = async (req, res, next) => {
       res.status(404).json({
         status: "error",
         code: 404,
-        message: `Not found contact id: ${id}`,
+        message: `Not found contact id: ${contactId}`,
         data: "Not Found",
       });
     }
@@ -103,10 +105,9 @@ const updateStatus = async (req, res, next) => {
   }
 };
 const remove = async (req, res, next) => {
-  const { id } = req.params;
-
+  const { contactId } = req.params;
   try {
-    const result = await service.removeById(id);
+    const result = await Contact.findOneAndDelete(contactId);
     if (result) {
       res.json({
         status: "success",
@@ -117,7 +118,7 @@ const remove = async (req, res, next) => {
       res.status(404).json({
         status: "error",
         code: 404,
-        message: `Not found contact id: ${id}`,
+        message: `Not found contact id: ${contactId}`,
         data: "Not Found",
       });
     }

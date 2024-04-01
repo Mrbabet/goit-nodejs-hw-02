@@ -1,6 +1,6 @@
 const express = require("express");
 const { validation, isValidId } = require("../../middlewares");
-const { joiSchema, favoriteJoiSchema } = require("../../models");
+const { joiSchema, favouriteJoiSchema } = require("../../models/contacts");
 const ctrlContacts = require("../../controllers");
 
 const router = express.Router();
@@ -17,9 +17,9 @@ router.put(
 );
 
 router.patch(
-  "/:contactId/favorite",
+  "/:contactId/favourite",
   isValidId,
-  validation(favoriteJoiSchema),
+  validation(favouriteJoiSchema),
   ctrlContacts.updateStatus
 );
 
