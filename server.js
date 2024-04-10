@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 require("dotenv").config();
 
 const PORT = process.env.PORT || 3000;
-const uriDb = process.env.DB_HOST;
+const DB_HOST = process.env.DB_HOST;
 const contactsRouter = require("./routes/api/contacts");
 const app = express();
 const formatsLogger = app.get("env") === "development" ? "dev" : "short";
