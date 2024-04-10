@@ -1,7 +1,7 @@
 const express = require("express");
 const { validation, isValidId } = require("../../middlewares");
 const { joiSchema, favouriteJoiSchema } = require("../../models/contacts");
-const ctrlContacts = require("../../controllers");
+const ctrlContacts = require("../../controllers/contactsController");
 
 const router = express.Router();
 
