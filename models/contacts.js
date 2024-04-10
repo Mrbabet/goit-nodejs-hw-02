@@ -1,62 +1,45 @@
-const fs = require("fs/promises");
+const { Schema, models, model } = require("mongoose");
+const Joi = require("joi");
 
-const path = require("path");
-const contactsPath = path.join(__dirname, "contacts.json");
+const emailRegex = /^([a-zA-Z0-9_\-.]+)@([a-zA-Z0-9_\-.]+)\.([a-zA-z]+)$/;
+const phoneRegex = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
 
-const listContacts = async () => {
-  const data = await fs.readFile(contactsPath);
-  const contacts = JSON.parse(data);
-  return contacts;
-};
+const ContactSchema = new Schema(
+  {
+    name: {
+      type: String,
+      minlength: 3,
+      required: [true, "Set name for contact"],
+    },
+    email: {
+      type: String,
+      unique: true,
+      match: emailRegex,
+      required: [true, "Set email for contact"],
+    },
+    phone: {
+      type: String,
+      match: phoneRegex,
+    },
+    favourite: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { versionKey: false, timestamps: true }
+);
 
-const getContactById = async (contactId) => {
-  const contacts = await listContacts();
-  const result = contacts.find((contact) => contact.id === contactId);
-  return result || null;
-};
+const joiSchema = Joi.object({
+  name: Joi.string().min(3).required(),
+  email: Joi.string().email().pattern(emailRegex).required(),
+  phone: Joi.string().pattern(phoneRegex).required(),
+  favorite: Joi.bool(),
+});
 
-const updateContacts = async (contacts) =>
-  await fs.writeFile(contactsPath, JSON.stringify(contacts, null, 2));
+const favouriteJoiSchema = Joi.object({
+  favourite: Joi.bool().required(),
+});
 
-const removeContact = async (contactId) => {
-  const contacts = await listContacts();
-  const index = contacts.findIndex((contact) => contact.id === contactId);
-  if (index === -1) {
-    return null;
-  }
-  const [result] = contacts.splice(index, 1);
-  await updateContacts(contacts);
-  return result;
-};
+const Contact = models?.Contact || model("contacts", ContactSchema);
 
-const addContact = async ({ name, email, phone }) => {
-  const contacts = await listContacts();
-
-  const newContact = {
-    id: Math.floor(Math.random()),
-    email,
-    phone,
-  };
-  contacts.push(newContact);
-  await updateContacts(contacts);
-  return newContact;
-};
-
-const updateContact = async (contactId, { name, email, phone }) => {
-  const contacts = await listContacts();
-  const index = contacts.findIndex((contact) => contact.id === contactId);
-  if (index === -1) {
-    return null;
-  }
-  contacts[index] = { id: contactId, name, email, phone };
-  await updateContacts(contacts);
-  return contacts[index];
-};
-
-module.exports = {
-  listContacts,
-  getContactById,
-  removeContact,
-  addContact,
-  updateContact,
-};
+module.exports = { Contact, joiSchema, favouriteJoiSchema };
