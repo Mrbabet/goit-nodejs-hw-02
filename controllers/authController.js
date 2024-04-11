@@ -1,79 +1,114 @@
 const { User } = require("../models/user");
-const { Unauthorized } = require("http-errors");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const { SECRET_KEY } = process.env;
+const { userSchema } = require("../validation/userSchemas");
+
+require("dotenv").config();
 
 const getCurrent = async (req, res) => {
-  console.log(req.user);
-  const { email, name } = req.user;
-  res.json({
-    status: "success",
-    code: 200,
-    data: {
-      email,
-      name,
-    },
-  });
+  try {
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+
+    res.status(200).json({
+      email: user.email,
+      subscription: user.subscription,
+    });
+  } catch (error) {
+    console.error("Error getting current user:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 const login = async (req, res) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
-  const pasCompare = bcrypt.compareSync(password, user.password);
+  try {
+    const { error, value } = userSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
 
-  if (!user || !pasCompare) {
-    throw new Unauthorized("Email or password is wrong");
-  }
+    const user = await User.findOne({ email: value.email });
+    if (!user) {
+      return res.status(401).json({ message: "Email or password is wrong" });
+    }
 
-  const payload = {
-    id: user._id,
-  };
+    const passwordMatch = await bcrypt.compare(value.password, user.password);
+    if (!passwordMatch) {
+      return res.status(401).json({ message: "Email or password is wrong" });
+    }
 
-  const token = jwt.sign(payload, SECRET_KEY, { expiresIn: "1h" });
+    const token = jwt.sign({ userId: user._id }, process.env.SECRET_KEY);
 
-  await User.findByIdAndUpdate(user._id, { token });
-  res.json({
-    status: "success",
-    code: 200,
-    data: {
+    user.token = token;
+    await user.save();
+
+    res.status(200).json({
       token,
       user: {
-        email,
+        email: user.email,
+        subscription: user.subscription,
       },
-    },
-  });
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 const logout = async (req, res) => {
-  const { _id } = req.user;
-  await User.findByIdAndUpdate(_id, { token: "" });
-  res.json({
-    status: "success",
-    code: 204,
-    message: "No Content",
-  });
+  try {
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(401).json({ message: "Not authorized" });
+    }
+
+    user.token = null;
+    await user.save();
+
+    res.status(204).json({ message: "Logout successful" });
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 const register = async (req, res) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
-  if (user) {
-    throw new Conflict(`${email} in use`);
-  }
+  try {
+    const { error, value } = userSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
 
-  const hashPassword = await bcrypt.hashSync(password, bcrypt.genSaltSync(10));
+    const existingUser = await User.findOne({ email: value.email });
+    if (existingUser) {
+      return res.status(409).json({ message: "Email in use" });
+    }
 
-  const newUser = await User.create({ ...req.body, password: hashPassword });
-  res.status(201).json({
-    status: "success",
-    code: 201,
-    data: {
+    const hashedPassword = await bcrypt.hash(value.password, 10);
+
+    const newUser = new User({
+      email: value.email,
+      password: hashedPassword,
+      subscription: "starter",
+    });
+    await newUser.save();
+
+    res.status(201).json({
       user: {
         email: newUser.email,
-        name: newUser.name,
+        subscription: newUser.subscription,
       },
-    },
-  });
+    });
+  } catch (error) {
+    console.error("Registration error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
+
 module.exports = { getCurrent, login, register, logout };

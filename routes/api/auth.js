@@ -1,13 +1,12 @@
 const express = require("express");
-const { validation, authenticate } = require("../../middlewares");
-const { schemas } = require("../../models/user");
 const ctrlAuth = require("../../controllers/authController");
+const authenticate = require("../../middlewares/authenticate");
 
 const router = express.Router();
 
-router.post("/signup", validation(schemas.registerSchema), ctrlAuth.register);
+router.post("/signup", ctrlAuth.register);
 
-router.post("/login", validation(schemas.loginSchema), ctrlAuth.login);
+router.post("/login", ctrlAuth.login);
 
 router.get("/current", authenticate, ctrlAuth.getCurrent);
 
