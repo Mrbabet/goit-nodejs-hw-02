@@ -1,17 +1,17 @@
 const express = require("express");
 const ctrlAuth = require("../../controllers/authController");
-const authenticate = require("../../middlewares/authenticate");
+const authMiddleware = require("../../middlewares/authenticate");
 const upload = require("../../middlewares/upload");
 
 const router = express.Router();
 
-router.post("/signup", ctrlAuth.register);
+router.post("/register", ctrlAuth.register);
 
 router.post("/login", ctrlAuth.login);
 
-router.get("/current", authenticate, ctrlAuth.getCurrent);
+router.get("/current", authMiddleware, ctrlAuth.getCurrent);
 
-router.post("/logout", authenticate, ctrlAuth.logout);
-router.patch("/avatars", authenticate, upload.single("avatar"));
+router.post("/logout", authMiddleware, ctrlAuth.logout);
+router.patch("/avatars", authMiddleware, upload.single("avatar"));
 
 module.exports = router;
