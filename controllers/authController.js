@@ -1,6 +1,5 @@
 const { User } = require("../models/user");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
 const { userSchema } = require("../validation/userSchemas");
 const gravatar = require("gravatar");
 
@@ -101,16 +100,13 @@ const getCurrent = async (req, res) => {
 const logout = async (req, res) => {
   try {
     const userId = req.user._id;
-
     const user = await User.findById(userId);
     if (!user) {
       return res.status(401).json({ message: "Not authorized" });
     }
-
     user.token = null;
     await user.save();
-
-    res.status(204).json({ message: "Logout successful" });
+    res.status(201).json({ message: "Logout successful" });
   } catch (error) {
     console.error("Logout error:", error);
     res.status(500).json({ message: "Internal server error" });

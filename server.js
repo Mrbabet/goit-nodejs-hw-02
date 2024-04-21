@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 const DB_HOST = process.env.DB_HOST;
 const contactsRouter = require("./routes/api/contacts.js");
 const authRouter = require("./routes/api/auth.js");
-const listRouter = require("./routes/api/listRouter");
+const avatarRouter = require("./routes/api/avatars");
 const authMiddleware = require("./middlewares/authenticate.js");
 
 const app = express();
@@ -23,7 +23,7 @@ passport.use(JwtStrategy);
 
 app.use("/api/contacts", contactsRouter);
 app.use("/api/users", authRouter);
-app.use("/api/list", authMiddleware, listRouter);
+app.use("/avatars", authMiddleware, avatarRouter);
 
 app.use((req, res) => {
   res.status(404).json({ message: "Not found" });
