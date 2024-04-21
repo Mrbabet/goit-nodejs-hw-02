@@ -23,7 +23,7 @@ passport.use(JwtStrategy);
 
 app.use("/api/contacts", contactsRouter);
 app.use("/api/users", authRouter);
-app.use("/avatars", authMiddleware, avatarRouter);
+app.use("/users/avatars", authMiddleware, avatarRouter);
 
 app.use((req, res) => {
   res.status(404).json({ message: "Not found" });
