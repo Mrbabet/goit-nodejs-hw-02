@@ -150,6 +150,7 @@ const remove = async (req, res, next) => {
     next(error);
   }
 };
+
 module.exports = {
   get,
   getById,
