@@ -2,7 +2,8 @@ const { User } = require("../models/user");
 const jwt = require("jsonwebtoken");
 const { userSchema } = require("../validation/userSchemas");
 const gravatar = require("gravatar");
-
+const crypto = require("crypto");
+const { sendVerification } = require("../utils/sendVerificationMail");
 require("dotenv").config();
 
 const register = async (req, res) => {
@@ -22,9 +23,12 @@ const register = async (req, res) => {
       email: value.email,
       subscription: "starter",
       avatarURL,
+      verificationToken: crypto.randomBytes(64).toString("hex"),
     });
     await newUser.setPassword(value.password);
     await newUser.save();
+
+    sendVerification(newUser);
 
     res.status(201).json({
       user: {
@@ -34,6 +38,35 @@ const register = async (req, res) => {
         avatarURL: newUser.avatarURL,
       },
     });
+  } catch (error) {
+    console.error("Registration error:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const verifyEmail = async (req, res) => {
+  try {
+    const { verificationToken } = req.params;
+
+    if (!verificationToken)
+      return res.status(404).json({ message: "User not found..." });
+
+    const user = await User.findOne({ verificationToken });
+
+    if (user) {
+      user.verificationToken = null;
+      user.verify = true;
+
+      await user.save();
+      res.status(200).json({
+        user: {
+          email: user.email,
+          subscription: user.subscription,
+          verificationToken: user.verificationToken,
+          verify: user.verify,
+        },
+      });
+    }
   } catch (error) {
     console.error("Registration error:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -113,4 +146,4 @@ const logout = async (req, res) => {
   }
 };
 
-module.exports = { getCurrent, login, register, logout };
+module.exports = { getCurrent, login, register, logout, verifyEmail };

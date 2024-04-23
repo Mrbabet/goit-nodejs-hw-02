@@ -8,5 +8,7 @@ router.post("/register", ctrlAuth.register);
 router.post("/login", ctrlAuth.login);
 router.get("/current", authMiddleware, ctrlAuth.getCurrent);
 router.post("/logout", authMiddleware, ctrlAuth.logout);
+router.get("/verify/:verificationToken", ctrlAuth.verifyEmail);
+router.get("/verify");
 
 module.exports = router;
