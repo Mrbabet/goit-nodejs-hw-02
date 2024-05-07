@@ -22,7 +22,7 @@ app.use(passport.initialize());
 passport.use(JwtStrategy);
 
 app.use("/api/contacts", contactsRouter);
-app.use("/api/users", authRouter);
+app.use("/users", authRouter);
 app.use("/users/avatars", authMiddleware, avatarRouter);
 
 app.use((req, res) => {
